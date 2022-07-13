@@ -21,7 +21,7 @@ def predict(image_path):
     # image = image.to(device)  # torch.Size([1, 3, 224, 224])
 
     model = train_regression_model.ResNet()
-    model.load_state_dict(torch.load("prediction/model_200epochs.pth"))
+    model.load_state_dict(torch.load("prediction/model_200epochs.pth", map_location=torch.device('cpu')))
     # model.to(device)
     model.eval()
 
