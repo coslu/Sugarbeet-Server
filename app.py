@@ -9,6 +9,10 @@ from google.cloud import storage
 app = Flask(__name__)
 api = Api(app)
 
+# Change model path here
+prediction_model = "prediction/model_300epochs.pth"
+preprocessing_model = "preprocessing/best.pt"
+
 
 @api.route('/predict')
 class Predict(Resource):
@@ -26,7 +30,7 @@ class Predict(Resource):
         blob = bucket.blob(file_name)
         blob.upload_from_filename(file_name)
 
-        result = predict(file_name)
+        result = predict(file_name, prediction_model)
 
         # save result
         blob = bucket.blob("output/" + name + ".txt")
@@ -51,7 +55,7 @@ class Process(Resource):
         blob = bucket.blob(file_name)
         blob.upload_from_filename(file_name)
 
-        detect_script.run("preprocessing/best.pt", file_name, save_txt=True, imgsz=[640, 640])
+        detect_script.run(preprocessing_model, file_name, save_txt=True, imgsz=[640, 640])
         try:
             # get the box that is closest to the center
             lines = open(f"results/labels/{name}.txt").readlines()
@@ -65,10 +69,10 @@ class Process(Resource):
                     min_dist_index = i
 
             outputs = crop_image.run(file_name, f"results/labels/{name}.txt")
-            result = predict(outputs[min_dist_index])
+            result = predict(outputs[min_dist_index], prediction_model)
         except Exception:
             # e.g. when there is no box
-            result = predict(file_name)
+            result = predict(file_name, prediction_model)
 
         # save result
         blob = bucket.blob("output/" + name + ".txt")
